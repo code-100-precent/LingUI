@@ -1,0 +1,39 @@
+# Source files
+src/
+components/
+utils/
+
+# Config files
+tsconfig.json
+rollup.config.js
+*.config.js
+*.config.ts
+
+# Development files
+.git/
+.gitignore
+.prettierrc
+.eslintrc
+.editorconfig
+
+# Documentation (keep README.md)
+docs/
+examples/
+
+# Testing
+test/
+tests/
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Development
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
