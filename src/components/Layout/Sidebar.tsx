@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Component, 
@@ -10,45 +9,83 @@ import {
   User as UserIcon,
   LogOut,
   Bell,
-  BookOpen, // 加入文档图标
-  Key, // 新增密钥图标
-  FileText, // 账单图标
-  Users, // 组织管理图标
-  AlertTriangle, // 告警图标
-  Database, // 配额管理图标
-  Smartphone, // 设备管理图标
-  Library, // 知识库图标
-  GitBranch, // 工作流图标
-  LayoutDashboard, // 概览图标
+  BookOpen,
+  Key,
+  FileText,
+  Users,
+  AlertTriangle,
+  Database,
+  Smartphone,
+  Library,
+  GitBranch,
+  LayoutDashboard,
 } from 'lucide-react'
-// NOTE: useAuthStore 和 useI18nStore 已移除，此组件包含业务逻辑，已从入口文件移除导出
-// import { useAuthStore } from '@/stores/authStore'
-// import { useI18nStore } from '@/stores/i18nStore'
-import AuthModal from '../Auth/AuthModal'
 import Button from '../UI/Button'
-type Group = { id: number; name: string; avatar?: string }
 
-const Sidebar = () => {
+export interface NavigationItem {
+  name: string
+  href: string
+  icon: React.ComponentType<{ className?: string }>
+}
+
+export interface SidebarProps {
+  logo?: React.ReactNode
+  logoText?: string
+  navigation?: NavigationItem[]
+  isAuthenticated?: boolean
+  user?: {
+    displayName?: string
+    avatar?: string
+  }
+  groups?: Array<{ id: number | string; name: string; avatar?: string }>
+  currentOrganizationId?: number | string | null
+  onOrganizationChange?: (id: number | string) => void
+  onLogin?: () => void
+  onLogout?: () => void
+  onNavigate?: (path: string) => void
+  currentPath?: string
+  className?: string
+}
+
+const Sidebar = ({
+  logo,
+  logoText = 'LingUI',
+  navigation = [],
+  isAuthenticated = false,
+  user,
+  groups = [],
+  currentOrganizationId = null,
+  onOrganizationChange,
+  onLogin,
+  onLogout,
+  onNavigate,
+  currentPath = '/',
+  className = ''
+}: SidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const location = useLocation()
-  // NOTE: useAuthStore 已移除，请通过 props 传入认证状态
-  // const { user, isAuthenticated, logout, currentOrganizationId, setCurrentOrganization } = useAuthStore()
-  const user = null
-  const isAuthenticated = false
-  const logout = () => {}
-  const currentOrganizationId = null
-  const setCurrentOrganization = () => {}
-  // NOTE: useI18nStore 已移除，请通过 props 传入翻译函数
-  // const { t } = useI18nStore()
-  const t = (key: string) => key
-  const [showAuthModal, setShowAuthModal] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
-  const [groups, setGroups] = useState<Group[]>([])
-  const navigate = useNavigate()
   const dropdownRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const dropdownContainerRef = useRef<HTMLDivElement>(null)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // 默认导航项
+  const defaultNavigation: NavigationItem[] = [
+    { name: 'Overview', href: '/overview', icon: LayoutDashboard },
+    { name: 'Smart Assistant', href: '/voice-assistant', icon: Bot },
+    { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Knowledge Base', href: '/knowledge', icon: Library },
+    { name: 'Workflow', href: '/workflows', icon: GitBranch },
+    { name: 'Notifications', href: '/notification', icon: Bell },
+    { name: 'Alerts', href: '/alerts', icon: AlertTriangle },
+    { name: 'Components', href: '/components', icon: Component },
+    { name: 'Billing', href: '/billing', icon: FileText },
+    { name: 'Groups', href: '/groups', icon: Users },
+    { name: 'Devices', href: '/devices', icon: Smartphone },
+    { name: 'Docs', href: '/docs', icon: BookOpen },
+  ]
+
+  const navItems = navigation.length > 0 ? navigation : defaultNavigation
 
   // 点击外部关闭下拉菜单
   useEffect(() => {
@@ -60,7 +97,6 @@ const Sidebar = () => {
     }
 
     if (showDropdown) {
-      // 使用延迟，避免在鼠标移动时立即关闭
       const timer = setTimeout(() => {
         document.addEventListener('mousedown', handleClickOutside)
       }, 100)
@@ -71,44 +107,13 @@ const Sidebar = () => {
     }
   }, [showDropdown])
 
-  // 获取组织列表
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchGroups()
-    } else {
-      setGroups([])
-    }
-  }, [isAuthenticated])
-
-  const fetchGroups = async () => {
-    try {
-      const res = { data: [] as Group[] }
-      setGroups(res.data || [])
-    } catch (err) {
-      console.error('获取组织列表失败', err)
+  const handleNavClick = (href: string) => {
+    if (onNavigate) {
+      onNavigate(href)
     }
   }
 
-  const navigation = [
-    ...(isAuthenticated && groups.length > 0 ? [{ name: t('nav.sidebar.overview'), href: '/overview', icon: LayoutDashboard }] : []),
-    { name: t('nav.sidebar.smartAssistant'), href: '/voice-assistant', icon: Bot },
-    { name: t('nav.sidebar.voiceTraining'), href: '/voice-training', icon: Settings },
-    { name: t('nav.sidebar.knowledgeBase'), href: '/knowledge', icon: Library },
-    { name: t('nav.sidebar.workflow'), href: '/workflows', icon: GitBranch },
-    { name: t('nav.sidebar.notification'), href: '/notification', icon: Bell},
-    { name: t('nav.sidebar.alerts'), href: '/alerts', icon: AlertTriangle },
-    { name: t('nav.sidebar.jsTemplate'), href: '/js-templates', icon: Component },
-    { name: t('nav.sidebar.billing'), href: '/billing', icon: FileText },
-    { name: t('nav.sidebar.groups'), href: '/groups', icon: Users },
-    { name: t('nav.sidebar.deviceManagement'), href: '/devices', icon: Smartphone },
-    { name: t('nav.docs'), href: '/docs', icon: BookOpen },
-  ]
-
-  const publicNavs = [t('nav.docs'), t('nav.about')]
-  // 受保护页面名称
-  const privateNavs = [t('nav.sidebar.overview'), t('nav.sidebar.smartAssistant'), t('nav.sidebar.voiceTraining'), t('nav.sidebar.knowledgeBase'), t('nav.sidebar.workflow'), t('nav.sidebar.notification'), t('nav.sidebar.alerts'), t('nav.sidebar.jsTemplate'), t('nav.sidebar.billing'), t('nav.sidebar.groups'), t('nav.sidebar.deviceManagement')]
-
-  const isActive = (path: string) => location.pathname === path
+  const isActive = (path: string) => currentPath === path || currentPath.startsWith(path + '/')
 
   // 桌面端侧边栏内容
   const desktopSidebarContent = (
@@ -116,27 +121,25 @@ const Sidebar = () => {
       {/* 顶部 LOGO 区域 */}
       <div className="h-14 flex items-center border-b border-border px-3 relative">
         {!isCollapsed && (
-          <Link to="/" className="flex items-center gap-2">
-            <img
-              src="https://cetide-1325039295.cos.ap-chengdu.myqcloud.com/folder/icon-192x192.ico"
-              alt="LingEcho Logo"
-              className="w-6 h-8 rounded"
-            />
-            <span
-              className="relative inline-block text-sm font-extrabold tracking-wider"
-            >
-              <span className="block">{t('brand.name')}</span>
-              <span className="absolute inset-0 bg-gradient-to-r  via-violet-400  bg-clip-text pointer-events-none select-none">
-                {t('brand.name')}
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleNavClick('/')}>
+            {logo || (
+              <div className="w-6 h-8 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                <span className="text-white text-xs font-bold">L</span>
+              </div>
+            )}
+            <span className="relative inline-block text-sm font-extrabold tracking-wider">
+              <span className="block">{logoText}</span>
+              <span className="absolute inset-0 bg-gradient-to-r via-violet-400 bg-clip-text text-transparent pointer-events-none select-none">
+                {logoText}
               </span>
             </span>
-          </Link>
+          </div>
         )}
         {/* 桌面端折叠/展开按钮 */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="absolute right-2 top-3 inline-flex items-center justify-center w-7 h-7 rounded-full hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-          title={isCollapsed ? t('theme.expand') : t('theme.collapse')}
+          title={isCollapsed ? 'Expand' : 'Collapse'}
         >
           {isCollapsed ? (
             <ChevronRight className="w-4 h-4" />
@@ -148,18 +151,14 @@ const Sidebar = () => {
 
       {/* 导航 */}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {navigation.filter(item => {
-          if (publicNavs.includes(item.name)) return true;
-          if (privateNavs.includes(item.name)) return isAuthenticated;
-          return true;
-        }).map(item => {
+        {navItems.map(item => {
           const Icon = item.icon
           return (
-            <Link
+            <div
               key={item.name}
-              to={item.href}
-              className={`group relative flex items-center rounded-md font-medium transition-colors ${
-                isActive(item.href) || location.pathname.startsWith(item.href + '/')
+              onClick={() => handleNavClick(item.href)}
+              className={`group relative flex items-center rounded-md font-medium transition-colors cursor-pointer ${
+                isActive(item.href)
                   ? 'text-foreground bg-accent'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               } ${isCollapsed ? 'justify-center px-2 py-3 hover:bg-accent/50' : 'px-3 py-2'}`}
@@ -176,12 +175,7 @@ const Sidebar = () => {
                     : isCollapsed
                       ? 'text-foreground group-hover:text-foreground'
                       : 'text-muted-foreground group-hover:text-foreground'
-                }`}
-                style={{ 
-                  display: 'block',
-                  minWidth: isCollapsed ? '20px' : '16px',
-                  minHeight: isCollapsed ? '20px' : '16px'
-                }}
+                } flex-shrink-0`}
               />
               {!isCollapsed && (
                 <motion.span
@@ -193,20 +187,20 @@ const Sidebar = () => {
                   {item.name}
                 </motion.span>
               )}
-              {(isActive(item.href) || location.pathname.startsWith(item.href + '/')) && !isCollapsed && (
+              {(isActive(item.href)) && !isCollapsed && (
                 <motion.div
                   layoutId="activeSidebarItem"
                   className="absolute right-0 w-1 h-6 bg-primary rounded-l-full"
                   transition={{ type: 'spring', bounce: 0.2, duration: 0.3 }}
                 />
               )}
-            </Link>
+            </div>
           )
         })}
       </nav>
+      
       {/* 底部功能区 */}
       <div className="mt-auto p-2 flex flex-col gap-2 relative">
-        {/* 通知中心按钮已移除，只保留用户区相关 */}
         <div>
           {isAuthenticated && user ? (
             <div 
@@ -222,7 +216,6 @@ const Sidebar = () => {
                 }
               }}
               onMouseLeave={() => {
-                // 延迟关闭，给鼠标移动到菜单的时间
                 if (hoverTimeoutRef.current) {
                   clearTimeout(hoverTimeoutRef.current)
                 }
@@ -237,13 +230,21 @@ const Sidebar = () => {
                 className={`flex items-center w-full p-1 rounded hover:bg-accent transition-colors group text-muted-foreground hover:text-foreground ${isCollapsed ? 'justify-center' : ''}`}
                 onClick={() => setShowDropdown((open) => !open)}
               >
-                <img
-                  src={user.avatar || `https://ui-avatars.com/api/?name=${user.displayName || 'U'}&background=0ea5e9&color=fff`}
-                  alt={user.displayName}
-                  className={`rounded-full ${isCollapsed ? 'w-9 h-9' : 'w-8 h-8 mr-2'}`}
-                />
+                <div className={`rounded-full bg-primary text-primary-foreground flex items-center justify-center ${isCollapsed ? 'w-9 h-9' : 'w-8 h-8 mr-2'}`}>
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.displayName || 'User'}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-xs font-semibold">
+                      {(user.displayName || 'U').charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
                 {!isCollapsed && (
-                  <span className="text-sm font-medium truncate max-w-[80px]">{user.displayName}</span>
+                  <span className="text-sm font-medium truncate max-w-[80px]">{user.displayName || 'User'}</span>
                 )}
               </button>
               {showDropdown && !isCollapsed && (
@@ -272,38 +273,40 @@ const Sidebar = () => {
                       variant="ghost"
                       size="sm"
                       className="flex items-center gap-2 w-full justify-start text-sm px-3 py-2"
-                      onClick={() => { setShowDropdown(false); navigate('/profile') }}
+                      onClick={() => { setShowDropdown(false); handleNavClick('/profile') }}
                       leftIcon={<UserIcon className="w-4 h-4" />}
                     >
-                      {t('nav.sidebar.profile')}
+                      Profile
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="flex items-center gap-2 w-full justify-start text-sm px-3 py-2"
-                      onClick={() => { setShowDropdown(false); navigate('/credential') }}
+                      onClick={() => { setShowDropdown(false); handleNavClick('/credential') }}
                       leftIcon={<Key className="w-4 h-4" />}
                     >
-                      {t('nav.sidebar.credential')}
+                      Credentials
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="flex items-center gap-2 w-full justify-start text-sm px-3 py-2"
-                      onClick={() => { setShowDropdown(false); navigate('/quotas') }}
+                      onClick={() => { setShowDropdown(false); handleNavClick('/quotas') }}
                       leftIcon={<Database className="w-4 h-4" />}
                     >
-                      {t('nav.sidebar.quotas')}
+                      Quotas
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex items-center gap-2 w-full justify-start text-sm px-3 py-2"
-                      onClick={async () => { setShowDropdown(false); await logout() }}
-                      leftIcon={<LogOut className="w-4 h-4" />}
-                    >
-                      {t('nav.logout')}
-                    </Button>
+                    {onLogout && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center gap-2 w-full justify-start text-sm px-3 py-2"
+                        onClick={() => { setShowDropdown(false); onLogout() }}
+                        leftIcon={<LogOut className="w-4 h-4" />}
+                      >
+                        Logout
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}
@@ -312,17 +315,15 @@ const Sidebar = () => {
             <Button
               variant="primary"
               className="w-full justify-center"
-              onClick={() => setShowAuthModal(true)}
+              onClick={onLogin}
               leftIcon={<UserIcon className="w-4 h-4" />}
             >
-              {!isCollapsed && t('nav.loginRegister')}
+              {!isCollapsed && 'Login'}
             </Button>
           )}
-          {/* 登录弹窗AuthModal */}
-          <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
         </div>
         
-        {/* 组织选择器 - 横向图标展示，放在最底部 */}
+        {/* 组织选择器 */}
         {isAuthenticated && groups.length > 0 && (
           <div className="mt-1 pt-1 border-t border-border">
             {!isCollapsed ? (
@@ -332,14 +333,11 @@ const Sidebar = () => {
                 {groups.map((group) => {
                   const isSelected = currentOrganizationId === group.id
                   const groupInitial = group.name.charAt(0).toUpperCase()
-                  const avatarUrl = group.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(group.name)}&background=6366f1&color=fff&size=32`
                   
                   return (
                     <motion.button
                       key={group.id}
-                      onClick={() => {
-                        setCurrentOrganization(group.id)
-                      }}
+                      onClick={() => onOrganizationChange?.(group.id)}
                       className={`
                         relative flex-shrink-0 w-6 h-6 rounded-lg overflow-hidden
                         transition-all duration-200
@@ -352,23 +350,28 @@ const Sidebar = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <img
-                        src={avatarUrl}
-                        alt={group.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          // 如果图片加载失败，显示文字头像
-                          const target = e.target as HTMLImageElement
-                          target.style.display = 'none'
-                          const parent = target.parentElement
-                          if (parent && !parent.querySelector('.fallback-avatar')) {
-                            const fallback = document.createElement('div')
-                            fallback.className = 'fallback-avatar w-full h-full flex items-center justify-center bg-primary text-primary-foreground text-xs font-semibold'
-                            fallback.textContent = groupInitial
-                            parent.appendChild(fallback)
-                          }
-                        }}
-                      />
+                      {group.avatar ? (
+                        <img
+                          src={group.avatar}
+                          alt={group.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.style.display = 'none'
+                            const parent = target.parentElement
+                            if (parent && !parent.querySelector('.fallback-avatar')) {
+                              const fallback = document.createElement('div')
+                              fallback.className = 'fallback-avatar w-full h-full flex items-center justify-center bg-primary text-primary-foreground text-xs font-semibold'
+                              fallback.textContent = groupInitial
+                              parent.appendChild(fallback)
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-primary text-primary-foreground text-xs font-semibold">
+                          {groupInitial}
+                        </div>
+                      )}
                       {isSelected && (
                         <motion.div
                           className="absolute inset-0 bg-primary/20"
@@ -394,14 +397,11 @@ const Sidebar = () => {
                 {groups.slice(0, 3).map((group) => {
                   const isSelected = currentOrganizationId === group.id
                   const groupInitial = group.name.charAt(0).toUpperCase()
-                  const avatarUrl = group.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(group.name)}&background=6366f1&color=fff&size=24`
                   
                   return (
                     <motion.button
                       key={group.id}
-                      onClick={() => {
-                        setCurrentOrganization(group.id)
-                      }}
+                      onClick={() => onOrganizationChange?.(group.id)}
                       className={`
                         relative w-7 h-7 rounded-lg overflow-hidden
                         transition-all duration-200
@@ -414,22 +414,28 @@ const Sidebar = () => {
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                     >
-                      <img
-                        src={avatarUrl}
-                        alt={group.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.style.display = 'none'
-                          const parent = target.parentElement
-                          if (parent && !parent.querySelector('.fallback-avatar')) {
-                            const fallback = document.createElement('div')
-                            fallback.className = 'fallback-avatar w-full h-full flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-semibold'
-                            fallback.textContent = groupInitial
-                            parent.appendChild(fallback)
-                          }
-                        }}
-                      />
+                      {group.avatar ? (
+                        <img
+                          src={group.avatar}
+                          alt={group.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.style.display = 'none'
+                            const parent = target.parentElement
+                            if (parent && !parent.querySelector('.fallback-avatar')) {
+                              const fallback = document.createElement('div')
+                              fallback.className = 'fallback-avatar w-full h-full flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-semibold'
+                              fallback.textContent = groupInitial
+                              parent.appendChild(fallback)
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-semibold">
+                          {groupInitial}
+                        </div>
+                      )}
                       {isSelected && (
                         <motion.div
                           className="absolute inset-0 bg-primary/20"
@@ -451,13 +457,6 @@ const Sidebar = () => {
     </>
   )
 
-  // 过滤后的导航项
-  const filteredNavigation = navigation.filter(item => {
-    if (publicNavs.includes(item.name)) return true;
-    if (privateNavs.includes(item.name)) return isAuthenticated;
-    return true;
-  })
-
   return (
     <>
       {/* 桌面端侧边栏 */}
@@ -465,25 +464,25 @@ const Sidebar = () => {
         initial={false}
         animate={{ width: isCollapsed ? 72 : 192 }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="hidden lg:flex flex-col bg-background border-r border-border relative"
+        className={`hidden lg:flex flex-col bg-background border-r border-border relative ${className}`}
       >
         {desktopSidebarContent}
       </motion.aside>
 
       {/* 移动端顶部 Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
+      <header className={`lg:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b border-border ${className}`}>
         {/* LOGO 和用户信息行 */}
         <div className="h-14 flex items-center justify-between px-4 border-b border-border">
-          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <img
-              src="https://cetide-1325039295.cos.ap-chengdu.myqcloud.com/folder/icon-192x192.ico"
-              alt="LingEcho Logo"
-              className="w-6 h-8 rounded"
-            />
+          <div className="flex items-center gap-2 flex-shrink-0 cursor-pointer" onClick={() => handleNavClick('/')}>
+            {logo || (
+              <div className="w-6 h-8 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                <span className="text-white text-xs font-bold">L</span>
+              </div>
+            )}
             <span className="text-sm font-extrabold tracking-wider">
-              {t('brand.name')}
+              {logoText}
             </span>
-          </Link>
+          </div>
           
           {/* 用户信息 */}
           <div className="flex items-center gap-2">
@@ -491,24 +490,28 @@ const Sidebar = () => {
               <div className="flex items-center gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] max-w-[120px]">
                 {groups.map((group) => {
                   const isSelected = currentOrganizationId === group.id
-                  const avatarUrl = group.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(group.name)}&background=6366f1&color=fff&size=24`
+                  const groupInitial = group.name.charAt(0).toUpperCase()
                   
                   return (
                     <button
                       key={group.id}
-                      onClick={() => {
-                        setCurrentOrganization(group.id)
-                      }}
+                      onClick={() => onOrganizationChange?.(group.id)}
                       className={`relative flex-shrink-0 w-6 h-6 rounded-lg overflow-hidden transition-all ${
                         isSelected ? 'ring-2 ring-primary' : ''
                       }`}
                       title={group.name}
                     >
-                      <img
-                        src={avatarUrl}
-                        alt={group.name}
-                        className="w-full h-full object-cover"
-                      />
+                      {group.avatar ? (
+                        <img
+                          src={group.avatar}
+                          alt={group.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-primary text-primary-foreground text-xs font-semibold">
+                          {groupInitial}
+                        </div>
+                      )}
                     </button>
                   )
                 })}
@@ -521,11 +524,19 @@ const Sidebar = () => {
                   onClick={() => setShowDropdown(!showDropdown)}
                   className="flex items-center gap-2 p-1 rounded hover:bg-accent transition-colors"
                 >
-                  <img
-                    src={user.avatar || `https://ui-avatars.com/api/?name=${user.displayName || 'U'}&background=0ea5e9&color=fff`}
-                    alt={user.displayName}
-                    className="w-8 h-8 rounded-full"
-                  />
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.displayName || 'User'}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                      <span className="text-xs font-semibold">
+                        {(user.displayName || 'U').charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                 </button>
                 {showDropdown && (
                   <div className="absolute right-0 top-full mt-2 w-40 bg-popover rounded-md shadow-lg border z-50">
@@ -534,38 +545,40 @@ const Sidebar = () => {
                         variant="ghost"
                         size="sm"
                         className="flex items-center gap-2 w-full justify-start text-sm px-3 py-2"
-                        onClick={() => { setShowDropdown(false); navigate('/profile') }}
+                        onClick={() => { setShowDropdown(false); handleNavClick('/profile') }}
                         leftIcon={<UserIcon className="w-4 h-4" />}
                       >
-                        {t('nav.sidebar.profile')}
+                        Profile
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="flex items-center gap-2 w-full justify-start text-sm px-3 py-2"
-                        onClick={() => { setShowDropdown(false); navigate('/credential') }}
+                        onClick={() => { setShowDropdown(false); handleNavClick('/credential') }}
                         leftIcon={<Key className="w-4 h-4" />}
                       >
-                        {t('nav.sidebar.credential')}
+                        Credentials
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="flex items-center gap-2 w-full justify-start text-sm px-3 py-2"
-                        onClick={() => { setShowDropdown(false); navigate('/quotas') }}
+                        onClick={() => { setShowDropdown(false); handleNavClick('/quotas') }}
                         leftIcon={<Database className="w-4 h-4" />}
                       >
-                        {t('nav.sidebar.quotas')}
+                        Quotas
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center gap-2 w-full justify-start text-sm px-3 py-2"
-                        onClick={async () => { setShowDropdown(false); await logout() }}
-                        leftIcon={<LogOut className="w-4 h-4" />}
-                      >
-                        {t('nav.logout')}
-                      </Button>
+                      {onLogout && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex items-center gap-2 w-full justify-start text-sm px-3 py-2"
+                          onClick={() => { setShowDropdown(false); onLogout() }}
+                          leftIcon={<LogOut className="w-4 h-4" />}
+                        >
+                          Logout
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -574,27 +587,26 @@ const Sidebar = () => {
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => setShowAuthModal(true)}
+                onClick={onLogin}
                 leftIcon={<UserIcon className="w-4 h-4" />}
               >
-                {t('nav.loginRegister')}
+                Login
               </Button>
             )}
-            <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
           </div>
         </div>
 
         {/* 导航项横向滚动 */}
         <div className="h-12 flex items-center overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] bg-background border-b border-border">
           <nav className="flex items-center gap-1 px-2 min-w-max">
-            {filteredNavigation.map(item => {
+            {navItems.map(item => {
               const Icon = item.icon
-              const active = isActive(item.href) || location.pathname.startsWith(item.href + '/')
+              const active = isActive(item.href)
               return (
-                <Link
+                <div
                   key={item.name}
-                  to={item.href}
-                  className={`group relative flex items-center gap-2 px-3 py-2 rounded-md font-medium text-xs whitespace-nowrap transition-colors ${
+                  onClick={() => handleNavClick(item.href)}
+                  className={`group relative flex items-center gap-2 px-3 py-2 rounded-md font-medium text-xs whitespace-nowrap transition-colors cursor-pointer ${
                     active
                       ? 'text-foreground bg-accent'
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
@@ -609,7 +621,7 @@ const Sidebar = () => {
                       transition={{ type: 'spring', bounce: 0.2, duration: 0.3 }}
                     />
                   )}
-                </Link>
+                </div>
               )
             })}
           </nav>

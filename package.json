@@ -1,5 +1,5 @@
 {
-  "name": "@lingui/ui",
+  "name": "lingui-ui",
   "version": "1.0.0",
   "description": "A modern, feature-rich React UI component library with beautiful animations and themes",
   "main": "dist/index.js",
@@ -15,7 +15,9 @@
     "dev": "rollup -c -w",
     "type-check": "tsc --noEmit",
     "prepublishOnly": "npm run build",
-    "install:legacy": "npm install --legacy-peer-deps"
+    "install:legacy": "npm install --legacy-peer-deps",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "keywords": [
     "react",
@@ -31,12 +33,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/lingui.git"
+    "url": "git+https://github.com/code-100-precent/LingUI.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/lingui/issues"
+    "url": "https://github.com/code-100-precent/LingUI/issues"
   },
-  "homepage": "https://github.com/yourusername/lingui#readme",
+  "homepage": "https://github.com/code-100-precent/LingUI#readme",
   "peerDependencies": {
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0"
@@ -52,20 +54,29 @@
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.5",
+    "@storybook/addon-essentials": "^8.6.14",
+    "@storybook/addon-interactions": "^8.6.14",
+    "@storybook/addon-links": "^8.6.15",
+    "@storybook/blocks": "^8.6.14",
+    "@storybook/react": "^8.6.15",
+    "@storybook/react-vite": "^8.6.15",
+    "@storybook/test": "^8.6.14",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
+    "@uiw/react-markdown-preview": "^4.0.0",
     "autoprefixer": "^10.4.16",
     "rollup": "^4.6.1",
     "rollup-plugin-dts": "^6.1.0",
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-postcss": "^4.0.2",
+    "storybook": "^8.6.15",
     "tailwindcss": "^3.3.6",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vite": "^5.4.21"
   },
   "optionalDependencies": {
     "lottie-web": "^5.12.2",
     "react-intersection-observer": "^9.5.3"
   }
 }
-

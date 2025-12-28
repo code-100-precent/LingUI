@@ -1,9 +1,7 @@
 import {ButtonHTMLAttributes, forwardRef} from 'react'
 import {motion} from 'framer-motion'
 import {cn} from '../../utils/cn'
-// @ts-ignore
 import {getCurrentTheme, getThemeClasses} from '../../utils/themeAdapter'
-// @ts-ignore
 import {playClickSound, playHoverSound} from '../../utils/audioEffects'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

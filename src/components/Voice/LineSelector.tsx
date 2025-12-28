@@ -1,5 +1,6 @@
 import React from 'react'
-import { LineMode } from '@/pages/VoiceAssistant/types'
+
+export type LineMode = 'webrtc' | 'websocket'
 
 interface LineSelectorProps {
   lineMode: LineMode

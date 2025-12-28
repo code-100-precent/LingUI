@@ -68,17 +68,17 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         const url = URL.createObjectURL(audioBlob);
         setAudioURL(url);
         
-        const reader = new FileReader();
-            reader.onloadend = () => {
-              const base64 = reader.result as string;
-              const base64Data = base64.split(',')[1];
-              onRecordingComplete(base64Data);
-            };
-            reader.readAsDataURL(audioBlob);
-          }
+        try {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64 = reader.result as string;
+            const base64Data = base64.split(',')[1];
+            onRecordingComplete(base64Data);
+          };
+          reader.readAsDataURL(audioBlob);
         } catch (error) {
-          console.error('上传音频文件失败:', error);
-          // 如果上传失败，回退到base64方式
+          console.error('处理音频文件失败:', error);
+          // 如果处理失败，回退到base64方式
           const reader = new FileReader();
           reader.onloadend = () => {
             const base64 = reader.result as string;

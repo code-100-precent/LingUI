@@ -31,7 +31,9 @@
     "src/components/Auth/**/*",
     "src/components/Voice/**/*",
     "src/components/Billing/**/*",
-    "src/components/Quota/**/*"
+    "src/components/Quota/**/*",
+    "src/components/UI/EnhancedThemeToggle.tsx",
+    "src/components/UI/LanguageSelector.tsx"
   ]
 }
 

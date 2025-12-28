@@ -18,18 +18,13 @@ export const Wave = ({
 }: WaveProps) => {
   const waveVariants = {
     animate: {
-      [direction === 'horizontal' ? 'x' : 'y']: [
-        0,
-        amplitude,
-        -amplitude,
-        amplitude,
-        -amplitude,
-        0
-      ],
+      ...(direction === 'horizontal' 
+        ? { x: [0, amplitude, -amplitude, amplitude, -amplitude, 0] }
+        : { y: [0, amplitude, -amplitude, amplitude, -amplitude, 0] }),
       transition: {
         duration: 2 / speed,
         repeat: Infinity,
-        ease: 'easeInOut'
+        ease: 'easeInOut' as const
       }
     }
   }
